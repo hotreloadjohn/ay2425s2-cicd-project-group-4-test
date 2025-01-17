@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Register</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+    <!-- Header Section -->
+    <header class="header-section bg-dark text-white p-3">
+        <div class="container d-flex justify-content-between align-items-center">
+            <a href="index.html" class="site-logo">
+                <img src="./Public/img/Movie-Logo-2.png" alt="Site Logo" width="100">
+            </a>
+            <nav class="top-nav-area">
+                <ul class="nav">
+                    <li class="nav-item"><a href="index.html" class="nav-link text-white">Home</a></li>
+                    <li class="nav-item"><a href="login.html" class="nav-link text-white">Login</a></li>
+                    <li class="nav-item"><a href="register.html" class="nav-link text-primary">Register</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Register Section with Gradient Background -->
+    <section class="register-section py-5" style="background: linear-gradient(135deg, #001f3f 0%, #0074D9 100%); color: white;">
+        <div class="container">
+            <div class="register-form bg-light text-dark p-4 rounded shadow" style="max-width: 500px; margin: auto;">
+                <h3 class="mb-4 text-center">Create Your Account</h3>
+                <form id="registration-form" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="username" class="form-label">Username</label>
+                        <input type="text" id="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="password" class="form-label">Password</label>
+                        <input type="password" id="password" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="type" class="form-label">Account Type</label>
+                        <select id="type" class="form-select" required>
+                            <option value="user">User</option>
+                            <option value="admin">Admin</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="profile-pic" class="form-label">Profile Picture</label>
+                        <input type="file" id="profile-pic" class="form-control" accept="image/*" required>
+                        <!-- Ensure you have an img element for the preview -->
+                        <img id="profile-pic-preview" alt="Profile Picture Preview" style="display: none; width: 100%; margin-top: 10px;">
+                        <small class="text-muted">Accepted formats: JPG, PNG, GIF</small>
+                    </div>
+                    <button type="submit" class="btn btn-primary w-100">Register</button>
+                </form>
+                <div class="text-center mt-2">
+                    <p>Already have an account? <a href="login.html" class="text-primary">Login here</a>.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Section -->
+    <footer class="footer bg-dark text-white text-center py-3">
+        <p>&copy; 2024 Your Website. All rights reserved.</p>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registration-form');
+            const profilePicInput = document.getElementById('profile-pic');
+            const profilePicPreview = document.getElementById('profile-pic-preview');
+        
+            // Setup the profile picture preview functionality
+            if (profilePicInput && profilePicPreview) {
+                profilePicInput.addEventListener('change', function(event) {
+                    const file = event.target.files[0];
+                    if (file && file.type.startsWith('image/')) {
+                        const reader = new FileReader();
+                        reader.onload = function(e) {
+                            profilePicPreview.src = e.target.result;
+                            profilePicPreview.style.display = 'block';
+                        };
+                        reader.readAsDataURL(file);
+                    } else {
+                        profilePicPreview.style.display = 'none';
+                        alert('Only image files are allowed.');
+                    }
+                });
+            } else {
+                console.error('Profile picture elements not found.');
+            }
+        
+            // Handle form submission
+            if (form) {
+                form.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const formData = new FormData(this);
+                    formData.append('type', document.getElementById('type').value);
+        
+                    fetch('/users/register', {
+                        method: 'POST',
+                        body: formData
+                    }).then(response => {
+                        if (!response.ok) {
+                            throw new Error(`Network response was not ok. Status: ${response.status}`);
+                        }
+                        return response.json();
+                    }).then(result => {
+                        alert('Registration successful!');
+                        window.location.href = 'home.html'; // Redirect on success
+                    }).catch(error => {
+                        console.error('Error submitting form:', error);
+                        alert('An error occurred: ' + error.message);
+                    });
+                });
+            } else {
+                console.error('Registration form not found.');
+            }
+        });
+        </script>
+        
+</body>
+</html>

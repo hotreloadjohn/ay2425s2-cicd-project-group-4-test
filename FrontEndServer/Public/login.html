@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+
+
+<head>
+	<title>MOVIESRATER Login</title>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<!-- logo -->
+	<link href="./img/logo4.1.png" rel="shortcut icon" />
+
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<!-- Stylesheets -->
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/slicknav.min.css" />
+	<link rel="stylesheet" href="css/owl.carousel.min.css" />
+	<link rel="stylesheet" href="css/magnific-popup.css" />
+	<link rel="stylesheet" href="css/animate.css" />
+
+	<!-- Main Stylesheets -->
+	<link rel="stylesheet" href="css/style.css" />
+	<link rel="stylesheet" href="css/style-login.css" />
+
+	<script>function lti_launch(vars, target) {
+			var query = '';
+			var new_tab = false;
+
+			for (var key in vars) {
+				if (query.length == 0) {
+					query += '?' + key + '=' + encodeURIComponent(vars[key]);
+				}
+				else {
+					query += '&' + key + '=' + encodeURIComponent(vars[key]);
+				}
+			}
+
+			var url = '/d2l/customization/pearsonlti/248658/Launch' + query; (target == '_blank') ? window.open(url, '_blank') : location.replace(url);
+		}</script>
+	<script src="https://s.brightspace.com/lib/bsi/20.23.6-201/unbundled/mathjax.js?v=20.23.6.17785"
+		type="module"></script>
+	<script>document.addEventListener('DOMContentLoaded', function () {
+			if (document.querySelector('math') || /\$\$|\\\(|\\\[|\\begin{|\\ref{|\\eqref{/.test(document.body.innerHTML)) {
+				document.querySelectorAll('mspace[linebreak="newline"]').forEach(elm => {
+					elm.setAttribute('style', 'display: block; height: 0.5rem;');
+				});
+
+				window.D2L.MathJax.loadMathJax({
+					'outputScale': 1.3,
+					'renderLatex': true
+				});
+			}
+		});</script>
+	<script src="https://s.brightspace.com/lib/bsi/20.23.6-201/unbundled/prism.js?v=20.23.6.17785"
+		type="module"></script>
+	<script>document.addEventListener('DOMContentLoaded', function () {
+			document.querySelectorAll('.d2l-code').forEach(code => {
+				window.D2L.Prism.formatCodeElement(code);
+			});
+		});</script>
+	<script>window.addEventListener('message', function (event) {
+			if (!event.data) {
+				return;
+			}
+
+			var params;
+			try {
+				params = JSON.parse(event.data);
+			}
+			catch {
+				return;
+			}
+			if (!params.subject || params.subject !== 'lti.frameResize') {
+				return;
+			}
+
+			const MAX_FRAME_HEIGHT = 10000
+			if (!params.height || params.height < 1 || params.height > MAX_FRAME_HEIGHT) {
+				console.warn('Invalid height value received, aborting');
+				return;
+			}
+			var el = document.getElementsByTagName('iframe');
+			for (var i = 0; i < el.length; i++) {
+				if (el[i].contentWindow === event.source) {
+					el[i].style.height = params.height + 'px';
+					el[i].style.width = '100%';
+					console.info('Setting iFrame height to ' + params.height);
+					console.info('Setting iFrame width to 100%');
+				}
+			}
+		});
+		
+		</script>
+</head>
+
+<script>
+	$(document).ready(function () {
+
+// Check user role function
+	function checkRole(token) {
+		$.ajax({
+			url: 'http://localhost:8081/CheckRole',
+			type: 'GET',
+			headers: { 'Authorization': 'Bearer ' + token },
+			success: function (data) {
+				if (data.role === 'Admin') {
+					$('.admin-tab').show();
+				} else {
+					$('.admin-tab').hide();
+				}
+			},
+			error: function (xhr) {
+				console.log(xhr.responseText || "Error verifying role.");
+				$('.admin-tab').hide(); // Hide admin tabs on error
+			}
+		});
+	}
+
+	// Check token and user role on page load
+	const token = localStorage.getItem('authToken');
+	if (token) {
+		checkRole(token);
+	} else {
+		$('.admin-tab').hide();
+	}
+
+// Toggle password visibility
+$('#togglePassword').click(function () {
+	const pwdField = $('#password');
+	const isPassword = pwdField.attr('type') === 'password';
+	pwdField.attr('type', isPassword ? 'text' : 'password');
+	$(this).attr('src', isPassword ? 'img/icons/eyePassVisible.png' : 'img/icons/eyePassHidden.png');
+});
+
+// Handle Remember Me functionality
+if (localStorage.getItem("rememberMe") === "true") {
+	const email = localStorage.getItem("logEmail");
+	const password = localStorage.getItem("logPassword");
+	$("#email").val(email);
+	$("#password").val(password);
+	$("#rememberMe").prop('checked', true);
+}
+
+// Handle Login functionality
+$('#Login').click(function () {
+	const email = $('#email').val();
+	const password = $('#password').val();
+	const rememberMe = $('#rememberMe').is(":checked");
+
+	const data = JSON.stringify({ email, password });
+
+	$.ajax({
+		url: "http://localhost:8081/users/login",
+		type: "POST",
+		data,
+		contentType: "application/json",
+		success: function (response) {
+			localStorage.setItem('authToken', response.token);
+			localStorage.setItem('user', JSON.stringify(response.user));
+
+			if (rememberMe) {
+				localStorage.setItem("logEmail", email);
+				localStorage.setItem("logPassword", password);
+				localStorage.setItem("rememberMe", true);
+			} else {
+				localStorage.removeItem("logEmail");
+				localStorage.removeItem("logPassword");
+				localStorage.removeItem("rememberMe");
+			}
+
+			alert("Welcome " + response.user.username);
+			window.location.href = "home.html";
+		},
+		error: function (xhr) {
+			alert(xhr.responseJSON.message || "Login failed! Please check your credentials.");
+		}
+	});
+
+	return false;
+});
+
+
+
+		// Handle Logout functionality
+		$('#Logout').click(function () {
+			localStorage.clear();
+			alert("You have successfully logged out.");
+			window.location.href = "login.html"; // Redirect to login page after logout
+		});
+
+	});
+	console.log('Authorization header:', req.headers['authorization']);
+
+</script>
+
+<body>
+	<!-- Page Preloder -->
+	<div id="preloder">
+		<div class="loader"></div>
+	</div>
+
+	<!-- Header section -->
+	<header class="header-section">
+		<div class="header-warp">
+			<div class="header-social d-flex justify-content-end">
+				<p>Follow us:</p>
+				<a href="#"><i class="fa fa-instagram"></i></a>
+				<a href="#"><i class="fa fa-facebook"></i></a>
+				<a href="#"><i class="fa fa-twitter"></i></a>
+			</div>
+			<div class="header-bar-warp d-flex">
+				<!-- site logo -->
+				<a href="home.html" class="site-logo">
+					<!-- <img src="./img/logo.png" alt=""> -->
+					<img src="./img/movie-Logo-2.png" alt="">
+
+				</a>
+				<nav class="top-nav-area w-100">
+					<div class="user-panel">
+						<div class="profile-dropdown">
+							<span class="profile-dropdown__trigger"><img src="img/icons/white-down-arrow.png"
+									alt="#" />Profile</span>
+							<ul class="profile-dropdown__menu">
+								<li><a href="login.html">Login</a></li>
+								<li><a href="" id="Logout">Logout</a></li>
+							</ul>
+						</div>
+					</div>
+					<!-- Menu -->
+					<div class="menu-container">
+						<ul class="main-menu primary-menu">
+							<li><a href="home.html">Home</a></li>
+							<li><a href="movies.html">Movies</a></li>
+							<li class="admin-tab"><a href="AddTheatres.html">Add Theatres</a></li>
+							<li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+							<li class="admin-tab"><a href="AddMovie.html">Add movie</a></li>
+						</ul>
+					</div>
+				</nav>
+			</div>
+		</div>
+	</header>
+
+	<!-- Page top section -->
+	<section class="page-top-section set-bg" data-setbg="img/topbanner.jpeg">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-12 text-center">
+					<div class="normal__breadcrumb__text" style="margin-top: 50px;">
+						<h2>Join MOVIESRATER123 Now!</h2>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Page top end-->
+
+	<!-- Login Section Begin -->
+	<section class="login spad">
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-6">
+					<div class="login__form">
+						<h3>Login</h3>
+						<form action="#">
+							<div class="input__item">
+								<input type="text" id="email" placeholder="Email address" required="required">
+								<a href="#" class="icon_email"></span><img src="img/icons/email-logo-gray.png"
+										alt="#" /></span></a>
+							</div>
+							<div class="input__item">
+								<input type="password" id="password" placeholder="Password" required="required">
+								<a href="#" class="icon_lock"></span><img src="img/icons/password-grey.png"
+										alt="#" /></span></a>
+								<img src="img/icons/eyePass.png" alt="#" id="togglePassword" />
+							</div>
+							<label class="remember-me-checkbox"><input type="checkbox" id="rememberMe"> Remember
+								me</label>
+							<button type="button" class="site-btn2" id="Login">Login Now</button>
+						</form>
+						<a href="#" class="forget_pass">Forgot Your Password?</a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Login Section End -->
+
+	<!-- Footer Section Begin -->
+	<footer class="footer">
+		<div class="page-up">
+			<a href="#" class="scrollToTopButton"><img src="img/icons/white-up-arrow.png" alt="#" /></span></a>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-3">
+					<div class="footer__logo">
+						<a href="home.html"><img src="img/Movie-Logo-3.jpg" alt=""></a>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="footer__nav">
+						<ul>
+							<li><a href="home.html">Home</a></li>
+							<li><a href="movies.html">Movies</a></li>
+							<li><a href="contact.html">Contact</a></li>
+							<li class="admin-tab"><a href="AddTheatres.html">Add Theatres</a></li>
+							<li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+							<li class="admin-tab"><a href="AddMovie.html">Add Movies</a></li>
+						</ul>
+						<div class="footer-social d-flex justify-content-center">
+							<a href="#"><i class="fa fa-instagram"></i></a>
+							<a href="#"><i class="fa fa-facebook"></i></a>
+							<a href="#"><i class="fa fa-twitter"></i></a>
+						</div>
+
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="footer-left-pic">
+			<img src="img/Movie-Logo-1.png" alt="">
+		</div>
+	</footer>
+
+	<!-- Footer Section End -->
+
+	<!-- Search model Begin -->
+	<div class="search-model">
+		<div class="h-100 d-flex align-items-center justify-content-center">
+			<div class="search-close-switch"><i class="icon_close"></i></div>
+			<form class="search-model-form">
+				<input type="text" id="search-input" placeholder="Search here.....">
+			</form>
+		</div>
+	</div>
+	<!-- Search model end -->
+
+	<!--====== Javascripts & Jquery ======-->
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.slicknav.min.js"></script>
+	<script src="js/owl.carousel.min.js"></script>
+	<script src="js/jquery.sticky-sidebar.min.js"></script>
+	<script src="js/jquery.magnific-popup.min.js"></script>
+	<script src="js/main.js"></script>
+
+
+</body>
+
+</html>

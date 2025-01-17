@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+	<title>Movies</title>
+	<meta charset="UTF-8">
+	<meta name="description" content="EndMov Movie Magazine Template">
+	<meta name="keywords" content="endMov, movie, magazine, movies, html">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<!-- logo -->
+	<link href="./img/logo4.1.png" rel="shortcut icon" />
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i,900,900i" rel="stylesheet">
+
+	<!-- Stylesheets -->
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/slicknav.min.css" />
+	<link rel="stylesheet" href="css/owl.carousel.min.css" />
+	<link rel="stylesheet" href="css/magnific-popup.css" />
+	<link rel="stylesheet" href="css/animate.css" />
+
+	<!-- Main Stylesheets -->
+	<link rel="stylesheet" href="css/style.css" />
+
+	<!--[if lt IE 9]>
+		  <script src="https://oss.maxcdn.com/html5shiv/3.7.2/html5shiv.min.js"></script>
+		  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+</head>
+
+
+<script>
+
+	$(document).ready(function () {
+
+		// Check user role
+		function checkRole(token) {
+
+			// Token Verification
+			$.ajax({
+				url: 'http://localhost:8081/CheckRole',
+				type: 'GET',
+				headers: { 'Authorization': 'Bearer ' + token },
+				success: function (data) {
+
+					// Check if user is admin
+					if (data.role === 'Admin') {
+
+						// Show admin tabs
+						$('.admin-tab').show();
+
+					} else {
+						// Hide admin tabs
+						$('.admin-tab').hide();
+					}
+				},
+
+				error: function (xhr, textStatus, error) {
+					console.log(error);
+				}
+			});
+		}
+
+
+		// Check token and user role
+		var token = localStorage.getItem('authToken');
+		if (token) {
+
+			checkRole(token);
+		}
+
+		else{
+
+			$('.admin-tab').hide();
+		}
+// Token Verification
+// $.ajax({
+//     url: 'http://localhost:8081/CheckRole',
+//     type: 'GET',
+//     headers: { 'Authorization': 'Bearer ' + token },
+//     success: function (data) {
+//         // Check if user is admin
+//         if (data.role === 'Admin') {
+//             // Show admin tabs
+//             $('.admin-tab').show();
+//         } else {
+//             // Hide admin tabs
+//             $('.admin-tab').hide();
+//         }
+//     },
+//     error: function (xhr, textStatus, error) {
+//         console.log("Failed to verify role:", xhr.responseText || error);
+//         $('.admin-tab').hide(); // Hide admin tabs on error
+//     }
+// });
+
+
+		$('#Logout').click(function () {
+
+			localStorage.clear();
+			alert("You have successfully Logged out.");
+
+		});
+
+	});
+
+</script>
+
+
+<body>
+	<!-- Page Preloader -->
+	<div id="preloder">
+		<div class="loader"></div>
+	</div>
+
+	<!-- Header section -->
+	<header class="header-section">
+		<div class="header-warp">
+			<div class="header-social d-flex justify-content-end">
+				<p>Follow us:</p>
+				<a href="#"><i class="fa fa-instagram"></i></a>
+				<a href="#"><i class="fa fa-facebook"></i></a>
+				<a href="#"><i class="fa fa-twitter"></i></a>
+			</div>
+			<div class="header-bar-warp d-flex">
+				<!-- site logo -->
+				<a href="home.html" class="site-logo">
+					<img src="./img/Movie-Logo-2.png" alt="">
+				</a>
+				<nav class="top-nav-area w-100">
+					<div class="user-panel">
+						<div class="profile-dropdown">
+							<span class="profile-dropdown__trigger">
+								<img src="img/icons/white-down-arrow.png" alt="#" />Profile
+							</span>
+							<ul class="profile-dropdown__menu">
+								<li><a href="login.html">Login</a></li>
+								<li><a href="" id="Logout">Logout</a></li>
+							</ul>
+						</div>
+					</div>
+					<!-- Menu -->
+					<div class="menu-container">
+						<ul class="main-menu primary-menu">
+							<li><a href="home.html">Home</a></li>
+							<li><a href="movies.html">Movies</a></li>
+							<li class="admin-tab"><a href="AddTheatres.html">Add Theatre</a></li>
+							<li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+							<li class="admin-tab"><a href="AddMovies.html">Add Movies</a></li>
+						</ul>
+					</div>
+				</nav>
+			</div>
+		</div>
+	</header>
+	<!-- Header section end -->
+
+	<!-- Search section -->
+	<div class="search">
+		<form action="movies.html" class="search-bar">
+			<input type="text" placeholder="Search movie" name="homeSearch">
+			<button type="submit"><img src="./img/icons/search-icon.png"></button>
+		</form>
+	</div>
+	<!-- Search section end -->
+
+	<!-- Newsletter section -->
+	<section class="newsletter-section">
+		<div class="container">
+			<h2>Subscribe to our membership to earn rewards !!!</h2>
+			<form class="newsletter-form">
+				<input type="text" placeholder="ENTER YOUR E-MAIL">
+				<button class="site-btn">Subscribe <img src="img/icons/double-arrow.png" alt="#" /></button>
+			</form>
+		</div>
+	</section>
+	<!-- Newsletter section end -->
+
+	<!-- Footer Section Begin -->
+	<footer class="footer">
+		<div class="page-up">
+			<a href="#" class="scrollToTopButton"><img src="img/icons/white-up-arrow.png" alt="#" /></a>
+		</div>
+		<div class="container">
+			<div class="row">
+				<div class="col-lg-3">
+					<div class="footer__logo">
+						<a href="home.html"><img src="img/Movie-Logo-3.jpg" alt=""></a>
+					</div>
+				</div>
+				<div class="col-lg-6">
+					<div class="footer__nav">
+						<ul>
+							<li><a href="home.html">Home</a></li>
+							<li><a href="movies.html">Movies</a></li>
+							<li class="admin-tab"><a href="AddTheatres.html">Add Theatre</a></li>
+							<li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+							<li class="admin-tab"><a href="AddMovies.html">Add Movies</a></li>
+						</ul>
+						<div class="footer-social d-flex justify-content-center">
+							<a href="#"><i class="fa fa-instagram"></i></a>
+							<a href="#"><i class="fa fa-facebook"></i></a>
+							<a href="#"><i class="fa fa-twitter"></i></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="footer-left-pic">
+			<img src="img/Movie-Logo-1.png" alt="">
+		</div>
+	</footer>
+	<!-- Footer Section End -->
+
+	<!--====== Javascripts & Jquery ======-->
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.slicknav.min.js"></script>
+	<script src="js/owl.carousel.min.js"></script>
+	<script src="js/jquery.sticky-sidebar.min.js"></script>
+	<script src="js/jquery.magnific-popup.min.js"></script>
+	<script src="js/main.js"></script>
+</body>
+
+</html>

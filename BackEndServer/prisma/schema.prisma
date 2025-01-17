@@ -1,0 +1,95 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Movie {
+  movieID          Int         @id @default(autoincrement())
+  title            String
+  movieDescription String       @map("movie_description")
+  movieImage       String        @map("movie_image")
+  rating           Int
+  year             Int
+  createdAt        DateTime     @default(now()) @map("created_at")
+  genres           MovieGenre[] 
+  reviews          Review[]
+  theatres         MovieTheatre[]
+
+  @@map("movie")
+}
+
+model Theatre {
+  theatreID   Int           @id @default(autoincrement())
+  theatre     String
+  description String
+  createdAt   DateTime      @default(now()) @map("created_at")
+  movies      MovieTheatre[]
+
+  @@map("theatre")
+}
+
+model User {
+  userID       Int        @id @default(autoincrement())
+  username     String     @unique
+  email        String     @unique
+  password     String
+  type         String
+  profilePicUrl String    @map("profile_pic_url")
+  createdAt    DateTime   @default(now()) @updatedAt @map("created_at")
+  reviews      Review[]
+
+  @@map("users")
+}
+
+model Genre {
+  genreID          Int           @id @default(autoincrement())
+  genreName        String        @unique
+  genreDescription String        @map("genre_description")
+  movies           MovieGenre[]
+
+  @@map("genre")
+}
+
+model MovieGenre {
+  movieGenreID Int      @id @default(autoincrement())
+  movie        Movie    @relation(fields: [movieID], references: [movieID], onDelete: Cascade, onUpdate: Cascade)
+  movieID      Int
+  genre        Genre    @relation(fields: [genreID], references: [genreID], onDelete: Cascade, onUpdate: Cascade)
+  genreID      Int
+  createdAt    DateTime @default(now()) @updatedAt @map("created_at")
+
+  @@map("movie_genre")
+}
+
+model Review {x
+  reviewID  Int      @id @default(autoincrement())
+  user      User     @relation(fields: [userID], references: [userID], onDelete: Cascade, onUpdate: Cascade)
+  userID    Int
+  movie     Movie    @relation(fields: [movieID], references: [movieID], onDelete: Cascade, onUpdate: Cascade)
+  movieID   Int
+  content   String   @db.VarChar(500)
+  rating    Int
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("review")
+}
+
+model MovieTheatre {
+  movieTheatreID Int      @id @default(autoincrement())
+  movie          Movie    @relation(fields: [movieID], references: [movieID], onDelete: Cascade, onUpdate: Cascade)
+  movieID        Int
+  theatre        Theatre  @relation(fields: [theatreID], references: [theatreID], onDelete: Cascade, onUpdate: Cascade)
+  theatreID      Int
+  price          String
+  createdAt      DateTime @default(now()) @updatedAt @map("created_at")
+
+  @@map("movie_theatre")
+}
+

@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+    <title>Movies - Add Movies</title>
+    <meta charset="UTF-8">
+    <meta name="description" content="EndMov Movie Magazine Template">
+    <meta name="keywords" content="endMov, movies, magazine, html">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- logo -->
+    <link href="./img/logo4.1.png" rel="shortcut icon" />
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+    <!-- Google Font -->
+    <link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i,900,900i" rel="stylesheet">
+
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="css/bootstrap.min.css" />
+    <link rel="stylesheet" href="css/font-awesome.min.css" />
+    <link rel="stylesheet" href="css/slicknav.min.css" />
+    <link rel="stylesheet" href="css/owl.carousel.min.css" />
+    <link rel="stylesheet" href="css/magnific-popup.css" />
+    <link rel="stylesheet" href="css/animate.css" />
+
+    <!-- Main Stylesheets -->
+    <link rel="stylesheet" href="css/style.css" />
+</head>
+
+<script>
+
+    // Function to print genres
+    function printGenres(genres) {
+        $("#genre").empty(); // Clear existing content
+
+        for (var i = 0; i < genres.length; i++) {
+            var genre = genres[i].genreName; // Get the genre name from the data
+            var option = `<input type="checkbox" id="${genre}" name="genre" value="${genre}">
+                          <label for="${genre}">${genre}</label><br>`;
+            $("#genre").append(option); // Append each genre checkbox
+        }
+    }
+
+    // Function to print theatres
+    function printTheatres(theatres) {
+        $("#theatre").empty(); // Clear existing content
+
+        for (var i = 0; i < theatres.length; i++) {
+            var theatre = theatres[i].theatre; // Get the theatre name from the data
+            var option = `<input type="checkbox" id="${theatre}" name="theatre" value="${theatre}">
+                          <label for="${theatre}">${theatre}</label><br>`;
+            $("#theatre").append(option); // Append each theatre checkbox
+        }
+    }
+
+    $(document).ready(function () {
+
+        var genreData = [];
+        var theatreData = [];
+
+        // Print Genres
+        $.ajax({
+            url: "http://localhost:8081/genre/",
+            type: "GET",
+            contentType: "application/json",
+            dataType: "json",
+            success: function (data, textStatus, xhr) {
+
+                genreData = data;
+                printGenres(data);
+
+                // Print Theatres
+                $.ajax({
+                    url: "http://localhost:8081/theatre/",
+                    type: "GET",
+                    contentType: "application/json",
+                    dataType: "json",
+                    success: function (data, textStatus, xhr) {
+
+                        theatreData = data;
+                        printTheatres(data);
+
+                        $('#submit-Movie').click(function () {
+
+                            var formData = new FormData();
+                            formData.append('title', $('#MovieTitle').val());  
+                            formData.append('movie_description', $('#MovieDescription').val()); 
+                            formData.append('movie_image', $('#MovieImage').val());  
+                            formData.append('year', $('#MovieYear').val());  
+                            formData.append('price', $('#MoviePrice').val());  
+
+                            // Get checked theatres
+                            var checkedTheatres = [];
+                            var theatreCheckbox = $('input[name="theatre"]:checked');
+                            for (var i = 0; i < theatreCheckbox.length; i++) {
+
+                                var theatre = $(theatreCheckbox[i]).val();
+
+                                function getTheatreID(theatre) {
+
+                                    for (var x = 0; x < theatreData.length; x++) {
+
+                                        if (theatreData[x].theatre === theatre) {
+
+                                            return theatreData[x].theatreID;
+                                        }
+                                    }
+
+                                    return null;
+                                }
+
+                                checkedTheatres.push(getTheatreID(theatre));
+                            }
+
+                            var theatreString = checkedTheatres.join(',');
+                            formData.append('theatreID', theatreString);
+
+                            // Get selected genres
+                            var checkedGenres = [];
+                            var genreCheckbox = $('input[name="genre"]:checked');
+                            for (var i = 0; i < genreCheckbox.length; i++) {
+
+                                var genreName = $(genreCheckbox[i]).val();
+
+                                function getGenreID(genreName) {
+
+                                    for (var x = 0; x < genreData.length; x++) {
+
+                                        if (genreData[x].genreName === genreName) {
+
+                                            return genreData[x].genreID;
+                                        }
+                                    }
+
+                                    return null;
+                                }
+
+                                checkedGenres.push(getGenreID(genreName));
+                            }
+
+                            var genreString = checkedGenres.join(',');
+                            formData.append('genreID', genreString);
+
+                            // Send data to server
+                            $.ajax({
+                                url: "http://localhost:8081/movie",
+                                type: "POST",
+                                data: formData,
+                                headers: { "authorization": "Bearer " + token },
+                                contentType: false,
+                                processData: false,
+                                success: function (data) {
+
+                                    alert("Movie added successfully.");
+                                },
+                                error: function (xhr, textStatus, err) {
+
+                                    console.log(err);
+                                    alert("Failed to add movie.");
+                                }
+                            });
+                        });
+                    },
+
+                    error: function (xhr, textStatus, err) {
+                        console.log(err);
+                    }
+                });
+            },
+
+            error: function (xhr, textStatus, err) {
+                console.log(err);
+            }
+        });
+
+        // Check user role
+        function checkRole(token) {
+
+            // Token Verification
+            $.ajax({
+                url: 'http://localhost:8081/CheckRole',
+                type: 'GET',
+                headers: { 'Authorization': 'Bearer ' + token },
+                success: function (data) {
+
+                    // Check if user is admin
+                    if (data.role === 'Admin') {
+
+                        // Show admin tabs
+                        $('.admin-tab').show();
+
+                    } else {
+                        // Hide admin tabs
+                        $('.admin-tab').hide();
+                    }
+                },
+
+                error: function (xhr, textStatus, error) {
+                    console.log(error);
+                }
+            });
+        }
+
+        // Check token and user role
+        const token = localStorage.getItem('authToken');
+        if (token) {
+
+            checkRole(token);
+        }
+
+        else {
+
+            $('.admin-tab').hide();
+        }
+
+        // Logout function
+        $('#Logout').click(function () {
+
+            localStorage.clear();
+            alert("You have successfully Logged out.");
+        });
+    });
+</script>
+
+<body>
+    <!-- Page Preloder -->
+    <div id="preloder">
+        <div class="loader"></div>
+    </div>
+
+    <!-- Header section -->
+    <header class="header-section">
+        <div class="header-warp">
+            <div class="header-social d-flex justify-content-end">
+                <p>Follow us:</p>
+                <a href="#"><i class="fa fa-instagram"></i></a>
+                <a href="#"><i class="fa fa-facebook"></i></a>
+                <a href="#"><i class="fa fa-twitter"></i></a>
+            </div>
+            <div class="header-bar-warp d-flex">
+                <!-- site logo -->
+                <a href="home.html" class="site-logo">
+                    <img src="./img/Movie-Logo-2.png" alt="">
+                </a>
+                <nav class="top-nav-area w-100">
+                    <div class="user-panel">
+                        <div class="profile-dropdown">
+                            <span class="profile-dropdown__trigger"><img src="img/icons/white-down-arrow.png"
+                                    alt="#" />Profile</span>
+                            <ul class="profile-dropdown__menu">
+                                <li><a href="login.html">Login</a></li>
+                                <li><a href="" id="Logout">Logout</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Menu -->
+                    <div class="menu-container">
+                        <ul class="main-menu primary-menu">
+                            <li><a href="home.html">Home</a></li>
+                            <li><a href="movies.html">Movies</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li class="admin-tab"><a href="AddTheatres.html">Add Theatre</a></li>
+                            <li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+                            <li class="admin-tab"><a href="AddMovies.html">Add Movie</a></li>
+                        </ul>
+                    </div>
+                </nav>
+            </div>
+        </div>
+    </header>
+    <!-- Header section end -->
+
+    <!-- Page top section -->
+    <section class="page-top-section set-bg" data-setbg="img/topbanner.jpeg">
+        <div class="page-info">
+            <h2>Add Movie</h2>
+            <div class="site-breadcrumb">
+                <a href="home.html">Home</a> /
+                <span>Add Movie</span>
+            </div>
+        </div>
+    </section>
+    <!-- Page top end-->
+
+    <!-- Add Movie section -->
+    <section class="movies-single-page" id="Movie-Info-Display">
+        <div class="container">
+            <div class="row">
+                <div class="col-xl-9 col-lg-8 col-md-7 movie-single-content">
+                    <h2 class="gs-title" style="text-decoration: underline;">Add a New Movie</h2>
+
+                    <h4>Movie Title</h4>
+                    <form id="add_Movie_Title">
+                        <input type="text" id="MovieTitle" name="Title" style="margin-top: 10px; margin-bottom: 20px;" required>
+                    </form>
+
+                    <h4>Movie Description</h4>
+                    <form id="add_Movie_Description">
+                        <input type="text" id="MovieDescription" name="movie_description" style="margin-top: 10px; margin-bottom: 20px;" required></textarea>
+                    </form>
+
+                    <h4>Movie Image</h4>
+                    <form id="add_Movie_Image">
+                        <input type="text" id="MovieImage" name="movie_image" style="margin-top: 10px; margin-bottom: 20px; color:white;">
+                        <div id="ImagePreview"></div>
+                    </form>
+
+                    <h4>Movie Price (comma-separated values for multiple theatres)</h4>
+                    <form id="add_Movie_Price">
+                        <input type="text" id="MoviePrice" name="price" style="margin-top: 10px; margin-bottom: 20px;" required>
+                    </form>
+
+                    <h4>Movie Theatre Selection</h4>
+                    <form id="add_Movie_Theatre">
+                        <div id="theatre" style="color: white; font-size:larger; margin-top: 10px; margin-bottom: 20px;"></div>
+                    </form>
+
+                    <h4>Movie Genre</h4>
+                    <form id="add_Movie_Genre">
+                        <div id="genre" style="color: white; font-size:larger; margin-top: 10px; margin-bottom: 20px;"></div>
+                    </form>
+
+                    <h4>Movie Published Year</h4>
+                    <form id="add_Movie_Year">
+                        <input type="text" id="MovieYear" name="year" style="margin-top: 10px; margin-bottom: 20px;" required>
+                    </form>
+
+                    <button type="button" id="submit-Movie" style="margin-top: 50px; font-size: larger;">Submit</button>
+                </div>
+            </div>
+        </div>
+    </section>
+    <!-- Add Movie end-->
+
+    <!-- Footer Section Begin -->
+    <footer class="footer">
+        <div class="page-up">
+            <a href="#" class="scrollToTopButton"><img src="img/icons/white-up-arrow.png" alt="#" /></span></a>
+        </div>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-3">
+                    <div class="footer__logo">
+                        <a href="home.html"><img src="img/Movie-Logo-3.jpg" alt=""></a>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="footer__nav">
+                        <ul>
+                            <li><a href="home.html">Home</a></li>
+                            <li><a href="movies.html">Movies</a></li>
+                            <li><a href="contact.html">Contact</a></li>
+                            <li class="admin-tab"><a href="AddTheatres.html">Add Theatre</a></li>
+                            <li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+                            <li class="admin-tab"><a href="AddMovies.html">Add Movie</a></li>
+                        </ul>
+                        <div class="footer-social d-flex justify-content-center">
+                            <a href="#"><i class="fa fa-instagram"></i></a>
+                            <a href="#"><i class="fa fa-facebook"></i></a>
+                            <a href="#"><i class="fa fa-twitter"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="footer-left-pic">
+            <img src="img/Movie-Logo-1.png" alt="">
+        </div>
+    </footer>
+    <!-- Footer Section End -->
+
+    <!--====== Javascripts & Jquery ======-->
+    <script src="js/jquery-3.2.1.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
+    <script src="js/jquery.slicknav.min.js"></script>
+    <script src="js/owl.carousel.min.js"></script>
+    <script src="js/jquery.sticky-sidebar.min.js"></script>
+    <script src="js/jquery.magnific-popup.min.js"></script>
+    <script src="js/main.js"></script>
+
+</body>
+
+</html>

@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="zxx">
+
+<head>
+	<title>SP Movie - Movie Details</title>
+	<meta charset="UTF-8">
+
+
+	<!-- logo -->
+	<link href="./img/logo4.1.png" rel="shortcut icon" />
+
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+	<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+	<!-- Google Font -->
+	<link href="https://fonts.googleapis.com/css?family=Roboto:400,400i,500,500i,700,700i,900,900i" rel="stylesheet">
+
+
+	<!-- Stylesheets -->
+	<link rel="stylesheet" href="css/bootstrap.min.css" />
+	<link rel="stylesheet" href="css/font-awesome.min.css" />
+	<link rel="stylesheet" href="css/slicknav.min.css" />
+	<link rel="stylesheet" href="css/owl.carousel.min.css" />
+	<link rel="stylesheet" href="css/magnific-popup.css" />
+	<link rel="stylesheet" href="css/animate.css" />
+
+	<!-- Main Stylesheets -->
+	<link rel="stylesheet" href="css/style.css" />
+
+
+
+
+</head>
+
+
+<script>
+
+
+	// Function to submit the review
+	function submitReview() {
+		// Get the form data
+		const reviewForm = document.getElementById('reviewForm');
+		const formData = new FormData(reviewForm);
+		const reviewData = {};
+		formData.forEach((value, key) => {
+			
+			reviewData[key] = value;
+		});
+
+		// Get movieID from URL parameter
+		const queryString = window.location.search;
+		const movieUrlParams = new URLSearchParams(queryString);
+		const movieID = movieUrlParams.get('movieID');
+		const userData = JSON.parse(localStorage.getItem('user'));
+		var token = localStorage.getItem("Token");
+
+
+		if (!userData || !token) {
+			alert('Please log in to add a review.');
+			return;
+		}
+
+
+		// Send the review data to the server using AJAX
+		$.ajax({
+			url: `http://localhost:8081/users/${userData.userID}/movie/${movieID}/review`,
+			type: 'POST',
+			data: JSON.stringify(reviewData),
+			headers: { "authorization": "Bearer " + token },
+			contentType: 'application/json',
+			success(data, textStatus, xhr) {
+
+				alert('Review added successfully!');
+				reviewForm.reset();									// Clear the form after successful submission
+				window.location = window.location.href;				// Refresh the page
+			},
+
+			error: function (xhr, textStatus, err) {
+
+				console.log(err);
+			},
+		});
+	}
+
+
+	$(document).ready(function () {
+
+		// Check user role
+		function checkRole(token) {
+
+			// Token Verification
+			$.ajax({
+				url: 'http://localhost:8081/CheckRole',
+				type: 'GET',
+				headers: { 'Authorization': 'Bearer ' + token },
+				success: function (data) {
+
+					// Check if user is admin
+					if (data.role === 'Admin') {
+
+						// Show admin tabs
+						$('.admin-tab').show();
+
+					} else {
+						// Hide admin tabs
+						$('.admin-tab').hide();
+					}
+				},
+
+				error: function (xhr, textStatus, error) {
+					console.log(error);
+				}
+			});
+		}
+
+		// Check token and user role
+		const token = localStorage.getItem('authToken');
+		if (token) {
+
+			checkRole(token);
+		}
+
+		else {
+
+			$('.admin-tab').hide();
+		}
+
+		
+		// Get movieID from URL parameter
+		const queryString = window.location.search;
+		const movieUrlParams = new URLSearchParams(queryString);
+		const movieID = movieUrlParams.get('movieID');
+		const userData = JSON.parse(localStorage.getItem('user'));
+
+
+		// Funtion to display Reviews
+		function displayReviews(reviews) {
+
+			const reviewsSection = document.getElementById('reviewsSection');
+
+			$("#reviewDisplaySection").html(""); // Clear previous search results
+
+			if (reviews.length > 0) {
+
+				for (let i = 0; i < reviews.length; i++) {
+
+
+					const reviewHTML = `
+										<section class="movie-review-section">
+										<div class="container">
+											<img src="data:image/jpeg;base64,${reviews[i].profile_pic_url}" alt="User Profile Pic"><div>
+											<div class="movie-review-info">
+											<h4>${reviews[i].username}</h4>
+											<h5 style="color: white;">${reviews[i].created_at}</h5>
+											<h5 style="color: white;">Rating Given: ${reviews[i].rating}</h5>
+											<p style="color: white;">${reviews[i].content}</p>
+											</div>
+										</div>
+										</section>
+										<hr>
+									`;
+
+
+					$("#reviewDisplaySection").append(reviewHTML);
+				}
+			}
+
+			else {
+				reviewsSection.innerHTML = '<p>No reviews found.</p>';
+			}
+		}
+
+
+		//Get Movie Details
+		$.ajax({
+
+			url: `http://localhost:8081/searchmoviedetails/${movieID}`,
+			type: 'GET',
+			contentType: "application/json",
+			dataType: 'json',
+			success(data, textStatus, xhr) {
+
+				$("#Movie-Info-Display").html("");
+
+				if (data.length > 0) {
+
+					const theatres = data[0].theatres.split(',');
+					const prices = data[0].prices.split(',');
+
+					if (theatres.length === prices.length) {
+						var pricesHTML = '';
+
+						for (let i = 0; i < theatres.length; i++) {
+							pricesHTML += `<p>${theatres[i]}: $${prices[i]}</p>`;
+						}
+
+
+
+						var displayMovie = `
+            <div class="container">
+              <div class="movie-single-preview">
+                <img src="data:image/jpeg;base64,${data[0].movie_image}" alt="">
+              </div>
+              <div class="row">
+                <div class="col-xl-9 col-lg-8 col-md-7 movie-single-content">
+                  <h2 class="gs-title">${data[0].title}</h2>
+                  <h4>Theatre</h4>
+                  <p>${data[0].theatres}</p>
+                  <h4>Genre</h4>
+                  <p>${data[0].genres}</p>
+                  <h4>Published Year</h4>
+                  <p>${data[0].year}</p>
+                  <h4>Description</h4>
+                  <p>${data[0].movie_description}</p>
+                  <h4>Price</h4>
+				  ${pricesHTML}
+                </div>
+              </div>
+            </div>
+          `;
+
+						$("#Movie-Info-Display").append(displayMovie);
+
+
+						// Get reviews for movie
+						$.ajax({
+							url: `http://localhost:8081/movie/${movieID}/review`,
+							type: 'GET',
+							contentType: "application/json",
+							dataType: 'json',
+							success(reviews, textStatus, xhr) {
+
+								displayReviews(reviews);
+							},
+
+							error: function (xhr, textStatus, err) {
+								console.log(err);
+							},
+						});
+					}
+				}
+			},
+
+			error: function (xhr, textStatus, err) {
+
+				console.log(err);
+			},
+		});
+
+
+		$('#submit-review').click(function (event) {
+			// Prevent the default form submission behavior
+			event.preventDefault();
+
+			submitReview()
+
+		});
+
+
+		//Logout function
+		$('#Logout').click(function () {
+
+			localStorage.clear();
+			alert("You have successfully Logged out.");
+
+		});
+
+	});
+
+
+
+
+
+
+</script>
+
+<body>
+	<!-- Page Preloder -->
+	<div id="preloder">
+		<div class="loader"></div>
+	</div>
+
+	<!-- Header section -->
+	<header class="header-section">
+		<div class="header-warp">
+			<div class="header-social d-flex justify-content-end">
+				<p>Follow us:</p>
+				<a href="#"><i class="fa fa-instagram"></i></a>
+				<a href="#"><i class="fa fa-facebook"></i></a>
+				<a href="#"><i class="fa fa-twitter"></i></a>
+			</div>
+			<div class="header-bar-warp d-flex">
+				<!-- site logo -->
+				<a href="home.html" class="site-logo">
+					<img src="./img/movie-Logo-2.png" alt="">
+				</a>
+				<nav class="top-nav-area w-100">
+					<div class="user-panel">
+						<div class="profile-dropdown">
+							<span class="profile-dropdown__trigger"><img src="img/icons/white-down-arrow.png"
+									alt="#" />Profile</span>
+							<ul class="profile-dropdown__menu">
+								<li><a href="login.html">Login</a></li>
+								<li><a href="" id="Logout">Logout</a></li>
+							</ul>
+						</div>
+					</div>
+					<!-- Menu -->
+					<div class="menu-container">
+						<ul class="main-menu primary-menu">
+							<li><a href="home.html">Home</a></li>
+							<li><a href="movies.html">Movies</a></li>
+							<li class="admin-tab"><a href="AddTheatre.html">Add Theatre</a></li>
+							<li class="admin-tab"><a href="AddGenre.html">Add Genre</a></li>
+							<li class="admin-tab"><a href="AddMovies.html">Add Movie</a></li>
+						</ul>
+					</div>
+				</nav>
+			</div>
+		</div>
+	</header>
+	<!-- Header section end -->
+
+	<!-- Page top section -->
+	<section class="page-top-section set-bg" data-setbg="img/topbanner.jpeg">
+		<div class="page-info">
+			<h2>Movies Details</h2>
+			<div class="site-breadcrumb">
+				<a href="home.html">Home</a> /
+				<span>Movies Details</span>
+			</div>
+		</div>
+	</section>
+	<!-- Page top end-->
+
+
+	<!-- Movies section -->
+	<section class="movie-single-page" id="Movie-Info-Display">
+		<div class="container">
+			<div class="movie-single-preview">
+				<img src=" " alt="">
+			</div>
+			<div class="row">
+				<div class="col-xl-9 col-lg-8 col-md-7 movie-single-content">
+					<h2 class="gs-title">Movie Title</h2>
+					<h4>Theatre</h4>
+					<p>Theatre</p>
+					<h4>Genre</h4>
+					<p>Genre</p>
+					<h4>Published Year</h4>
+					<p>Published Year</p>
+					<h4>Description</h4>
+					<p>Description</p>
+					<h4>Price</h4>
+					<p>Price</p>
+				</div>
+			</div>
+		</div>
+	</section>
+	<!-- Movie end-->
+
+	<div class="movie-comment">
+		<h2>Review</h2>
+
+		<section class="movie-review-add" id="reviewAddSection">
+			<div class="container">
+				<form id="reviewForm">
+					<textarea name="content" required></textarea>
+					<div class="rating-container">
+						<label for="rating">Rating:</label>
+						<!-- Use dropdown to select the rating -->
+						<select id="ratingDropdown" name="rating" required>
+							<option value="1">1</option>
+							<option value="2">2</option>
+							<option value="3">3</option>
+							<option value="4">4</option>
+							<option value="5">5</option>
+						</select>
+					</div>
+					<button type="submit" id="submit-review">Submit Review</button>
+				</form>
+			</div>
+		</section>
+
+		<section class="movie-review-section" id="reviewDisplaySection">
+			<div class="container">
+				<img src=" " alt="User Profile Pic">
+				<div class="movie-review-info">
+					<h4>Name</h4>
+					<h5>Created_at</h5>
+					<h5>Rating Given: rating</h5>
+					<p style="color: white;">Review Content.</p>
+				</div>
+			</div>
+		</section>
+	</div>
+
+
+	<!-- Newsletter section -->
+	<!-- Newsletter section end -->
+
+
+<!-- Footer Section Begin -->
+<footer class="footer">
+	<div class="page-up">
+		<a href="#" class="scrollToTopButton"><img src="img/icons/white-up-arrow.png" alt="#" /></a>
+	</div>
+	<div class="container">
+		<div class="row">
+			<div class="col-lg-3">
+				<div class="footer__logo">
+					<a href="home.html"><img src="img/Movie-Logo-3.jpg" alt=""></a>
+				</div>
+			</div>
+			<div class="col-lg-6">
+				<div class="footer__nav">
+					<ul>
+						<li><a href="home.html">Home</a></li>
+						<li><a href="movies.html">Movies</a></li>
+						<li class="admin-tab"><a href="AddTheatres.html">Add Theatre</a></li>
+						<li class="admin-tab"><a href="AddGenres.html">Add Genres</a></li>
+						<li class="admin-tab"><a href="AddMovies.html">Add Movies</a></li>
+					</ul>
+					<div class="footer-social d-flex justify-content-center">
+						<a href="#"><i class="fa fa-instagram"></i></a>
+						<a href="#"><i class="fa fa-facebook"></i></a>
+						<a href="#"><i class="fa fa-twitter"></i></a>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="footer-left-pic">
+		<img src="img/Movie-Logo-1.png" alt="">
+	</div>
+</footer>
+
+<!-- Footer Section End -->
+
+
+	<!-- Javascripts Scripts -->
+	<script src="js/jquery-3.2.1.min.js"></script>
+	<script src="js/bootstrap.min.js"></script>
+	<script src="js/jquery.slicknav.min.js"></script>
+	<script src="js/owl.carousel.min.js"></script>
+	<script src="js/jquery.sticky-sidebar.min.js"></script>
+	<script src="js/jquery.magnific-popup.min.js"></script>
+	<script src="js/main.js"></script>	
+</body>
+
+</html>
