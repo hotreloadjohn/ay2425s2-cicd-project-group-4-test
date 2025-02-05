@@ -44,4 +44,4 @@ jobs:
         with:
           app-name: "test-movieapp"
           slot-name: "Production"
-          package: . # Or 'release.zip' if you kept the zip step
+          package: ./BackEndServer # Or 'release.zip' if you kept the zip step
