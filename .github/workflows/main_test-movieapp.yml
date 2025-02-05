@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  deploy: # Renamed job to reflect combined functionality
+  build-and-deploy: # Combined job name
     runs-on: ubuntu-latest
     environment:
       name: "Production"
@@ -29,8 +29,8 @@ jobs:
           # npm run build --if-present
           # npm run test --if-present
 
-      - name: Zip artifact for deployment (still needed for webapps-deploy by default)
-        run: zip release.zip ./* -r
+      - name: Zip artifact for deployment (Optional - if needed by Azure Deploy)
+        run: zip release.zip ./* -r # You might still need to zip if Azure Web App Deploy action expects a zip
 
       - name: Login to Azure
         uses: azure/login@v2
@@ -45,4 +45,4 @@ jobs:
         with:
           app-name: "test-movieapp"
           slot-name: "Production"
-          package: release.zip # Deploy the zipped package directly
+          package: . # Or 'release.zip' if you kept the zip step
