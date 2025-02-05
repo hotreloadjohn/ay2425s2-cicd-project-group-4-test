@@ -1,25 +1,48 @@
-name: Minimal Deploy Test
+name: Build and deploy Node.js app to Azure Web App - test-movieapp
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
-  test-deploy:
+  deploy: # Renamed job to reflect combined functionality
     runs-on: ubuntu-latest
+    environment:
+      name: "Production"
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write
 
     steps:
-      - name: Checkout code (just for context, not strictly needed for minimal test)
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Login to Azure (Minimal Test)
+      - name: Set up Node.js version
+        uses: actions/setup-node@v3
+        with:
+          node-version: "20.x"
+
+      - name: npm install, build, and test
+        run: |
+          cd BackEndServer && npm install
+          # npm run build --if-present
+          # npm run test --if-present
+
+      - name: Zip artifact for deployment (still needed for webapps-deploy by default)
+        run: zip release.zip ./* -r
+
+      - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2BAD45426DCA429D88675F806F283136 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4FF710FF8836414CA0918C094110B58C }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15DD761FDE4D4894B36D7289DC6575ED }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2BAD45426DCA429D88675F806F28313 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4FF710FF8836414CA0918C094110B58 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15DD761FDE4D4894B36D7289DC6575E }}
 
-      - name: Minimal Deploy Command (Just to see if login works)
-        run: |
-          az webapp list --resource-group <YourResourceGroupName>  # Replace with your actual Resource Group
+      - name: "Deploy to Azure Web App"
+        id: deploy-to-webapp
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: "test-movieapp"
+          slot-name: "Production"
+          package: release.zip # Deploy the zipped package directly
