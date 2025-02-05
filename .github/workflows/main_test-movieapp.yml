@@ -31,7 +31,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: node-app
-          path: BackEndServer # Upload the BackEndServer directory directly
+          path: BackEndServer  # Upload the BackEndServer directory directly
 
   deploy:
     runs-on: ubuntu-latest
@@ -40,26 +40,18 @@ jobs:
       name: "Production"
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write
+      id-token: write #This is required for requesting the JWT
 
     steps:
       - name: Download artifact from build job
         uses: actions/download-artifact@v4
         with:
           name: node-app
-          path: BackEndServer # Download to a BackEndServer directory (creates it if needed)
 
-      - name: Login to Azure
-        uses: azure/login@v2
-        with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_2BAD45426DCA429D88675F806F28313 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_4FF710FF8836414CA0918C094110B58 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_15DD761FDE4D4894B36D7289DC6575E }}
-
-      - name: "Deploy to Azure Web App"
+      - name: Deploy to Azure Web App
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: "test-movieapp"
           slot-name: "Production"
-          package: BackEndServer # Deploy from the BackEndServer directory
+          package: node-app # Point to the downloaded directory (artifact name)
